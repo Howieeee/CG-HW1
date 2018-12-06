@@ -177,7 +177,7 @@ function main() {
   var bulletInfos= []; 
   
   /*建立敵人子彈的list*/
-  /*在每5秒做list的push*/
+  /*在每秒做list的push*/
   var eBulletInfos = []; 
   
   var mySpeed = 0; //自己的移動速度
@@ -246,24 +246,17 @@ function main() {
 	  var isDelete = false;//判斷是否刪除
     bulletInfo.x = bulletInfo.x;//x不變
 	  bulletInfo.y += bulletInfo.dy * bulletSpeed * deltaTime;;//更新y座標
-	  for(var i=0;i<eBulletInfos.length;i++){
-		if(impact(bulletInfo,eBulletInfos[i])){
+	  for(var i=0;i<eBulletInfos.length;i++){//對每個敵方子彈做判斷
+		if(impact(bulletInfo,eBulletInfos[i])){//判斷自己子彈與敵方子彈是否碰撞
 			var index = bulletInfos.indexOf(bulletInfo);
-			bulletInfos.splice(index,1);
-			eBulletInfos.splice(i,1);
+			bulletInfos.splice(index,1);//刪除自己子彈
+			eBulletInfos.splice(i,1);//刪除敵方子彈
 			isDelete = true;
 			break;
 		}
 	  
 	  }
-	  if(!isDelete){
-      if (bulletInfo.y < 0) {
-        //meInfo.dy = 1;
-      }
-      if (bulletInfo.y >= gl.canvas.height) {
-        //meInfo.dy = -1;
-      }
-	  }
+	 
     });
 	
 	var eBulletSpeed = 170;
@@ -367,7 +360,6 @@ function main() {
 
   var then = 0;
   var counter = 0;
-  var start = 0;
   var temp = 0;
   var HP =100;
   var score = 0;
@@ -376,17 +368,21 @@ function main() {
   var tForASec=0;
   function render(time) {
   
-	var c = document.getElementById("texts");
+	var c = document.getElementById("texts");//取得右邊的畫布
+
+  /*繪製遊戲資訊 Title, HP, Score, EnemyNum, Time*/
 	var context = c.getContext("2d");
 	context.clearRect(0,0,c.width,c.height);
 	context.font = "20px serif";
 	context.fillStyle = 'blue';
 	context.fillText("CG HW1",100,23);
 	
+  /*繪製一條水平線切割*/
 	context.beginPath();
 	context.moveTo(0,30);
 	context.lineTo(300,30);
 	context.stroke();
+
 	context.fillStyle = 'black';
 	context.fillText('HP: '+HP,25,55);
 	context.fillText('Score: '+score,25,85);
@@ -395,76 +391,79 @@ function main() {
 	context.fillText('Time: '+q,25,145);
 
 	
-	if(enemyInfos.length==0){  //打光了
-		window.alert("You Win~~");
-	}
-    var now = time * 0.001 ;
+	
+
+    var now = time * 0.001 ; //轉成 sec
     var deltaTime = Math.min(0.1, now - then);
     then = now;
 	
-	countASec = (now - tForASec);
+	countASec = (now - tForASec); //用來計算一秒
 	if(countASec > 1){
-		q--;
+    if(enemyInfos.length>0){  //有敵人再生成
+		
+    var speed = 180;
+    var index = Math.floor(Math.random()*enemyInfos.length);
+    var eBulletInfo = {
+    
+    x: enemyInfos[index].x+5,
+    y: enemyInfos[index].y + 16,
+    dx: 0,
+    dy: 1,
+      
+    textureInfo: eBulletTexture[0],
+    };
+    
+    eBulletInfos.push(eBulletInfo);
+  }
+		q--; // q 從60開始倒數 每一秒-1
 		countASec = 0;
 		tForASec = now;
 	}
 	
-	if(q <0)
+	if(q <0) //時間到 遊戲結束
 		window.alert("Time's UP!!");
-	if(HP==0)
+	if(HP==0)//生命值歸零 遊戲結束
 		window.alert("Game Over!");
-	counter = (now - temp);
-	//console.log(counter);
+  if(enemyInfos.length==0)  //消滅敵人 遊戲結束
+		window.alert("You Win~~");
+	
+
+	counter = (now - temp);//計算是否5秒
 	
 	
-	if(counter>5){
+	if(counter>5){ //5秒生成一批新的敵人
 		
-		if(enemyInfos.length>0){  //有敵人再生成
-		
-			var speed = 180;
-			var index = Math.floor(Math.random()*enemyInfos.length);
-			var eBulletInfo = {
-			
-			x: enemyInfos[index].x+5,
-			y: enemyInfos[index].y + 16,
-			dx: 0,
-			dy: 1,
-			  
-			textureInfo: eBulletTexture[0],
-			};
-			
-			eBulletInfos.push(eBulletInfo);
-		}
-		
-		if(enemyInfos.length <= 30)
-		createEnemy();
+		if(enemyInfos.length <= 30)//敵人數最多30
+		  createEnemy();
+
 		counter =0;
 		temp = now;
 	}
 	
-    update(deltaTime);
-    draw();
+    update(deltaTime); //作畫面更新
+    draw();//繪製
 	
-    requestAnimationFrame(render);
+    requestAnimationFrame(render);//render迴圈
   }
   requestAnimationFrame(render);
   
+  /*製造敵人*/
   function createEnemy(){
-	var num = 5;
-	for(var i=0;i<num;i++){
-	var enemyInfo = {
-      x: Math.random() * gl.canvas.width,
-      y: (Math.random()*300+1),
-	  //y: 0,
-      dx: Math.random() > 0.5 ? -1 : 1,
-      dy: Math.random() > 0.5 ? -1 : 1,
-      textureInfo: enemyTexture[Math.random() * enemyTexture.length | 0],
-    };
-	enemyInfos.push(enemyInfo);
-	}
+	  var num = Math.floor(Math.random()*5+1); //每次生成1~6個敵人
+
+	  for(var i=0;i<num;i++){
+	     var enemyInfo = {
+          x: Math.random() * gl.canvas.width,//畫布中任何x座標
+          y: (Math.random()*300+1),//限定y在1~301
+          dx: Math.random() > 0.5 ? -1 : 1,//隨機x移動方向
+          dy: Math.random() > 0.5 ? -1 : 1,//隨機y移動方向
+          textureInfo: enemyTexture[0],//給予texture
+        };
+	    enemyInfos.push(enemyInfo);//push進list
+	  }
   }
-  // Unlike images, textures do not have a width and height associated
-  // with them so we'll pass in the width and height of the texture
+
+  /*繪製Image*/
   function drawImage(tex, texWidth, texHeight, dstX, dstY,judge) {
     gl.bindTexture(gl.TEXTURE_2D, tex);
 
@@ -498,7 +497,7 @@ function main() {
     gl.uniform1i(textureLocation, 0);
 	
 	
-    // draw the quad (2 triangles, 6 vertices)
+    
 	if(judge==0)
 		gl.drawArrays(gl.TRIANGLES, 0, 3);
 	
