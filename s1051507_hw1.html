@@ -351,9 +351,6 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
           bulletInfo.y,
           judge);//judge = 0時 使用第一種texture 座標(正三角形)
       });
-
-
-
     }
 
     var then = 0;
@@ -511,45 +508,31 @@ for webgl-utils, m3, m4, and webgl-lessons-ui.
 
     window.onkeydown = function (e) {
       if (e.keyCode == 37) {
-        mySpeed = -80;
-        numToDraw = numToDraw + 1;
+        mySpeed = -80;//左
       }
       if (e.keyCode == 39)
-        mySpeed = 80;
-
-
-
+        mySpeed = 80;//右
     }
 
     window.onkeyup = function (e) {
-      if (e.keyCode == 37)
+      if (e.keyCode == 37)//左
         mySpeed = 0;
-      if (e.keyCode == 39)
+      if (e.keyCode == 39)//右
         mySpeed = 0;
-
-
     }
 
     window.onkeypress = function (e) {
-      if (e.keyCode == 32) {
-
-        var c = document.getElementById("canvas");
-        var numToDraws = 1;
-
-        var speed = 60;
+      if (e.keyCode == 32) { //空白
         var bulletInfo = {
-          x: meInfo.x + 5,
-          y: meInfo.y - 16,
-          dx: 0,
-          dy: -1,
-
-          textureInfo: bulletTexture[0],
+          x: meInfo.x + 5, //設定x座標 
+          y: meInfo.y - 16,//設定y座標
+          dx: 0, //x不變
+          dy: -1, //y改變方向
+          textureInfo: bulletTexture[0],//給texture
         };
-
-        bulletInfos.push(bulletInfo);
+        bulletInfos.push(bulletInfo);//push進list
       }
     }
-
   }
   main();
 </script>
