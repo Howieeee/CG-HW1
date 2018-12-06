@@ -183,13 +183,15 @@ function main() {
   
   var mySpeed = 0; //自己的移動速度
 
+
   function update(deltaTime) {
-  
-    enemyInfos.forEach(function(enemyInfo) {  //更新每個敵人
+
+    //更新每個敵人
+    enemyInfos.forEach(function(enemyInfo) {  
 	  var isDelete = false;
-      enemyInfo.x += enemyInfo.dx * speed* deltaTime;
-     enemyInfo.y += enemyInfo.dy * speed * deltaTime;
-	 for(var i=0;i<bulletInfos.length;i++){
+    enemyInfo.x += enemyInfo.dx * speed* deltaTime;
+    enemyInfo.y += enemyInfo.dy * speed * deltaTime;
+	  for(var i=0;i<bulletInfos.length;i++){
 		if(impact(enemyInfo,bulletInfos[i])){
 				var index = enemyInfos.indexOf(enemyInfo);
 				enemyInfos.splice(index,1);
