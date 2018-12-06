@@ -310,6 +310,7 @@ function main() {
 
     gl.clear(gl.COLOR_BUFFER_BIT);
 
+    /*對每個物件的list當中元素做drawImage*/
     enemyInfos.forEach(function(enemyInfo) {
 	  var judge = 1;
       drawImage(
@@ -318,7 +319,7 @@ function main() {
         enemyInfo.textureInfo.height,
         enemyInfo.x,
         enemyInfo.y,
-		judge);
+		    judge); //judge = 1時 使用第二種texture 座標(倒三角形)
     });
 	
 	eBulletInfos.forEach(function(eBulletInfo) {
@@ -329,7 +330,7 @@ function main() {
         eBulletInfo.textureInfo.height,
         eBulletInfo.x,
         eBulletInfo.y,
-		judge);
+		    judge);//judge = 1時 使用第二種texture 座標(倒三角形)
     });
 	
 	 meInfos.forEach(function(meInfo) {
@@ -340,7 +341,7 @@ function main() {
         meInfo.textureInfo.height,
         meInfo.x,
         meInfo.y,
-		judge);
+		    judge);//judge = 0時 使用第一種texture 座標(正三角形)
     });
 	
 	bulletInfos.forEach(function(bulletInfo) {
@@ -351,7 +352,7 @@ function main() {
         bulletInfo.textureInfo.height,
         bulletInfo.x,
         bulletInfo.y,
-		judge);
+		    judge);//judge = 0時 使用第一種texture 座標(正三角形)
     });
 	
 	
@@ -498,14 +499,14 @@ function main() {
 	
 	
     
-	if(judge==0)
+	if(judge==0) //第一種 texture
 		gl.drawArrays(gl.TRIANGLES, 0, 3);
 	
 	gl.bindBuffer(gl.ARRAY_BUFFER, ePositionBuffer);
     gl.enableVertexAttribArray(positionLocation);
     gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
 	
-	if(judge==1)
+	if(judge==1)//第二種 texture
 	gl.drawArrays(gl.TRIANGLES, 0, 3);
 	
   }
