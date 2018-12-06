@@ -139,6 +139,7 @@ function main() {
 
     return textureInfo;
   }
+
   /*建立Texture*/
   var enemyTexture = [loadImageAndCreateTextureInfo('s1051507_imag1.png')]; // enemy的 texture
   var myTexture = [loadImageAndCreateTextureInfo('s1051507_imag2.png')];//本機的 texture
@@ -159,8 +160,6 @@ function main() {
     };
     enemyInfos.push(enemyInfo); //push進list
   }
-
-
 
   /*建立自己的list*/
   var meInfos=[];
@@ -183,29 +182,29 @@ function main() {
   
   var mySpeed = 0; //自己的移動速度
 
-
   function update(deltaTime) {
 
     //更新每個敵人
     enemyInfos.forEach(function(enemyInfo) {  
-	  var isDelete = false;
-    enemyInfo.x += enemyInfo.dx * speed* deltaTime;
-    enemyInfo.y += enemyInfo.dy * speed * deltaTime;
+	  var isDelete = false; //當前敵人是否已刪除
+    enemyInfo.x += enemyInfo.dx * speed* deltaTime; //更新x座標
+    enemyInfo.y += enemyInfo.dy * speed * deltaTime;//更新y座標
 	  for(var i=0;i<bulletInfos.length;i++){
-		if(impact(enemyInfo,bulletInfos[i])){
+		if(impact(enemyInfo,bulletInfos[i])){  //判斷敵人與子彈是否碰撞
 				var index = enemyInfos.indexOf(enemyInfo);
-				enemyInfos.splice(index,1);
-				bulletInfos.splice(i,1);
-				score += 100;
+				enemyInfos.splice(index,1);//刪除敵人
+				bulletInfos.splice(i,1);//刪除子彈
+				score += 100;//+分數
 				isDelete = true;
 				break;
 		}
 	 }
 	if(!isDelete){
+    /*防止出範圍 並更改x,y變動方向*/
 		if (enemyInfo.x < 0) {
 			enemyInfo.dx = 1;
 		}
-		if (enemyInfo.x >= 367) {
+		if (enemyInfo.x >= 367) { 
 			enemyInfo.dx = -1;
 		}
 		if (enemyInfo.y < 0) {
@@ -217,32 +216,36 @@ function main() {
 	 }
     });
 	
-	meInfos.forEach(function(meInfo) { //更新自己
-      meInfo.x += meInfo.dx * mySpeed * deltaTime;
-	  meInfo.y = meInfo.y;
+  //更新自己
+	meInfos.forEach(function(meInfo) { 
+    meInfo.x += meInfo.dx * mySpeed * deltaTime; //更新x座標
+	  meInfo.y = meInfo.y;//y不變
 	  
-	  for(var i=0;i<enemyInfos.length;i++){
-		if(impact(meInfo,enemyInfos[i])){
-			enemyInfos.splice(i,1);
-			HP -=10;
+	  for(var i=0;i<enemyInfos.length;i++){//每個敵人都要判斷
+		if(impact(meInfo,enemyInfos[i])){ //判斷自己與敵人是否碰撞
+			enemyInfos.splice(i,1);//刪除敵人
+			HP -=10;//扣血
 			break;
 		}
 	  }
 	  
-	  if(meInfo.x > 367)
-		meInfo.x = 367;
+	  if(meInfo.x > 367)//防止出範圍
+		  meInfo.x = 367;
 		
-      if (meInfo.x <= 0) {
-        meInfo.dx = 1;
-		meInfo.x = 0;
-      }
+    if (meInfo.x <= 0) {//防止出範圍
+      meInfo.dx = 1;
+	    meInfo.x = 0;
+    }
+
     });
 	
-	var bulletSpeed = 170;
+	var bulletSpeed = 170;//子彈速度
+
+  //更新每個子彈
 	bulletInfos.forEach(function(bulletInfo) {
-	  var isDelete = false;
-      bulletInfo.x = bulletInfo.x;
-	  bulletInfo.y += bulletInfo.dy * bulletSpeed * deltaTime;;
+	  var isDelete = false;//判斷是否刪除
+    bulletInfo.x = bulletInfo.x;//x不變
+	  bulletInfo.y += bulletInfo.dy * bulletSpeed * deltaTime;;//更新y座標
 	  for(var i=0;i<eBulletInfos.length;i++){
 		if(impact(bulletInfo,eBulletInfos[i])){
 			var index = bulletInfos.indexOf(bulletInfo);
