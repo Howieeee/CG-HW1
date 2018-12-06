@@ -1,0 +1,556 @@
+<!-- Licensed under a BSD license. See license.html for license -->
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>1051507 CG HW1</title>
+<link type="text/css" href="s1051507_hw1.css" rel="stylesheet" />
+</head>
+<body>
+<div >
+<canvas id="canvas" ></canvas> 
+<canvas id="texts"></canvas>
+</div>
+</body>
+<!-- vertex shader -->
+<script id="drawImage-vertex-shader" type="x-shader/x-vertex">
+attribute vec4 a_position;
+attribute vec2 a_texcoord;
+
+uniform mat4 u_matrix;
+
+varying vec2 v_texcoord;
+
+void main() {
+   gl_Position = u_matrix * a_position;
+   v_texcoord = a_texcoord;
+}
+</script>
+<script id="drawImage-fragment-shader" type="x-shader/x-fragment">
+precision mediump float;
+
+varying vec2 v_texcoord;
+
+uniform sampler2D u_texture;
+
+void main() {
+   gl_FragColor = texture2D(u_texture, v_texcoord);
+}
+</script>
+<!--
+for most samples webgl-utils only provides shader compiling/linking and
+canvas resizing because why clutter the examples with code that's the same in every sample.
+See http://webglfundamentals.org/webgl/lessons/webgl-boilerplate.html
+and http://webglfundamentals.org/webgl/lessons/webgl-resizing-the-canvas.html
+for webgl-utils, m3, m4, and webgl-lessons-ui.
+-->
+<script src="resources/webgl-utils.js"></script>
+<script src="resources/m4.js"></script>
+<script>
+"use strict";
+
+function main() {
+  // Get A WebGL context
+  /** @type {HTMLCanvasElement} */
+  var canvas = document.getElementById("canvas");
+  
+  
+  
+  var gl = canvas.getContext("webgl");
+  if (!gl) {
+    return;
+  }
+	
+  // setup GLSL program
+  var program = webglUtils.createProgramFromScripts(gl, ["drawImage-vertex-shader", "drawImage-fragment-shader"]);
+
+  // look up where the vertex data needs to go.
+  var positionLocation = gl.getAttribLocation(program, "a_position");
+  var texcoordLocation = gl.getAttribLocation(program, "a_texcoord");
+
+  // lookup uniforms
+  var matrixLocation = gl.getUniformLocation(program, "u_matrix");
+  var textureLocation = gl.getUniformLocation(program, "u_texture");
+
+  // Create a buffer.
+  var positionBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+  
+
+  // Put a unit quad in the buffer
+  var positions = [  //要畫三角形的座標
+    0, 1,
+	  0.5, 0,
+    1, 1,
+  ]
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+  
+  
+  // Create a buffer for texture coords
+  var texcoordBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+
+  // Put texcoords in the buffer
+  var texcoords = [
+    0, 1,
+	0.5, 0,
+    1, 1,
+   
+  ]
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texcoords), gl.STATIC_DRAW);
+  
+  
+   var ePositionBuffer = gl.createBuffer();
+	gl.bindBuffer(gl.ARRAY_BUFFER,ePositionBuffer);
+  var ePositions = [
+    0, 0,
+	1, 0,
+    0.5, 1,
+  ]
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ePositions), gl.STATIC_DRAW);
+
+  // creates a texture info { width: w, height: h, texture: tex }
+  // The texture will start with 1x1 pixels and be updated
+  // when the image has loaded
+  function loadImageAndCreateTextureInfo(url) {
+    var tex = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+    // Fill the texture with a 1x1 blue pixel.
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, 1, 1, 0, gl.RGBA, gl.UNSIGNED_BYTE,
+                  new Uint8Array([0, 0, 255, 255]));
+
+    // let's assume all images are not a power of 2
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
+
+    var textureInfo = {
+      width: 1,   // we don't know the size until it loads
+      height: 1,
+      texture: tex,
+    };
+    var img = new Image();
+    img.addEventListener('load', function() {
+      textureInfo.width = img.width;
+      textureInfo.height = img.height;
+
+      gl.bindTexture(gl.TEXTURE_2D, textureInfo.texture);
+      gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    });
+    img.src = url;
+
+    return textureInfo;
+  }
+
+  var textureInfos = [
+    
+    loadImageAndCreateTextureInfo('s1051507_imag1.png')
+    //loadImageAndCreateTextureInfo('resources/keyboard.jpg'),
+  ];
+  
+  var me = [loadImageAndCreateTextureInfo('s1051507_imag2.png')];
+  
+  
+  var enemyInfos = [];
+  var numToDraw = 10; //初始敵人數
+  var speed = 60; //敵人移動速度
+  for (var ii = 0; ii < numToDraw; ++ii) {
+    var enemyInfo = {
+      x: Math.random() * gl.canvas.width,
+      y: Math.random()*200+1, 
+      dx: Math.random() > 0.5 ? -1 : 1,
+      dy: Math.random() > 0.5 ? -1 : 1,
+      textureInfo: textureInfos[Math.random() * textureInfos.length | 0],
+    };
+    enemyInfos.push(enemyInfo);
+  }
+  var meInfos=[];
+  
+  var meInfo ={
+		x: 500,
+	   y: 569,
+      dx:  1,
+      dy:  1,
+      textureInfo: me[0],
+    };
+  meInfos.push(meInfo);
+  
+  var bullet = [loadImageAndCreateTextureInfo('s1051507_imag3.png')];
+  var bulletInfos= []; //子彈
+  
+  var eBullet = [loadImageAndCreateTextureInfo('s1051507_imag4.png')]
+  var eBulletInfos = []; //敵人子彈
+  
+  var s = 0;
+  function update(deltaTime) {
+  
+    enemyInfos.forEach(function(enemyInfo) {  //更新每個敵人
+	  var isDelete = false;
+      enemyInfo.x += enemyInfo.dx * speed* deltaTime;
+     enemyInfo.y += enemyInfo.dy * speed * deltaTime;
+	 for(var i=0;i<bulletInfos.length;i++){
+		if(impact(enemyInfo,bulletInfos[i])){
+				var index = enemyInfos.indexOf(enemyInfo);
+				enemyInfos.splice(index,1);
+				bulletInfos.splice(i,1);
+				score += 100;
+				isDelete = true;
+				break;
+		}
+	 }
+	if(!isDelete){
+		if (enemyInfo.x < 0) {
+			enemyInfo.dx = 1;
+		}
+		if (enemyInfo.x >= 367) {
+			enemyInfo.dx = -1;
+		}
+		if (enemyInfo.y < 0) {
+			enemyInfo.dy = 1;
+		}
+		if (enemyInfo.y >= 570) {
+			enemyInfo.dy = -1;
+		}
+	 }
+    });
+	
+	meInfos.forEach(function(meInfo) { //更新自己
+      meInfo.x += meInfo.dx * s * deltaTime;
+	  meInfo.y = meInfo.y;
+	  
+	  for(var i=0;i<enemyInfos.length;i++){
+		if(impact(meInfo,enemyInfos[i])){
+			enemyInfos.splice(i,1);
+			HP -=10;
+			break;
+		}
+	  }
+	  
+	  if(meInfo.x > 367)
+		meInfo.x = 367;
+		
+      if (meInfo.x <= 0) {
+        meInfo.dx = 1;
+		meInfo.x = 0;
+      }
+    });
+	
+	var bulletSpeed = 170;
+	bulletInfos.forEach(function(bulletInfo) {
+	  var isDelete = false;
+      bulletInfo.x = bulletInfo.x;
+	  bulletInfo.y += bulletInfo.dy * bulletSpeed * deltaTime;;
+	  for(var i=0;i<eBulletInfos.length;i++){
+		if(impact(bulletInfo,eBulletInfos[i])){
+			var index = bulletInfos.indexOf(bulletInfo);
+			bulletInfos.splice(index,1);
+			eBulletInfos.splice(i,1);
+			isDelete = true;
+			break;
+		}
+	  
+	  }
+	  if(!isDelete){
+      if (bulletInfo.y < 0) {
+        //meInfo.dy = 1;
+      }
+      if (bulletInfo.y >= gl.canvas.height) {
+        //meInfo.dy = -1;
+      }
+	  }
+    });
+	
+	var eBulletSpeed = 170;
+	eBulletInfos.forEach(function(eBulletInfo) {
+	
+      eBulletInfo.x = eBulletInfo.x;
+	  eBulletInfo.y += eBulletInfo.dy * eBulletSpeed * deltaTime;;
+	  
+	  if(impact(meInfo,eBulletInfo)){
+			HP -=10;
+			var index = eBulletInfos.indexOf(eBulletInfo);
+			eBulletInfos.splice(index,1);
+	  }
+      
+    });
+	
+  }
+  
+  function impact(obj1,obj2){ 
+	var o ={
+		x: obj1.x,
+		y: obj1.y,
+		w: obj1.textureInfo.width,
+		h: obj1.textureInfo.height,
+	}
+	
+	var d ={
+		x: obj2.x,
+		y: obj2.y,
+		w: obj2.textureInfo.width,
+		h: obj2.textureInfo.height,
+	}
+	
+	var px,py;
+	px = o.x <= d.x ? d.x : o.x;
+	py = o.y <= d.y ? d.y : o.y;
+	
+	if (px >= o.x && px <= o.x + o.w && py >= o.y && py <= o.y + o.h && px >= d.x && px <= d.x + d.w && py >= d.y && py <= d.y + d.h) {
+		return true;
+	} else {
+		return false;
+	}
+
+  }
+  
+  function draw() {
+    webglUtils.resizeCanvasToDisplaySize(gl.canvas);
+
+    // Tell WebGL how to convert from clip space to pixels
+    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+    gl.clear(gl.COLOR_BUFFER_BIT);
+
+    enemyInfos.forEach(function(enemyInfo) {
+	  var judge = 1;
+      drawImage(
+        enemyInfo.textureInfo.texture,
+        enemyInfo.textureInfo.width,
+        enemyInfo.textureInfo.height,
+        enemyInfo.x,
+        enemyInfo.y,
+		judge);
+    });
+	
+	eBulletInfos.forEach(function(eBulletInfo) {
+	  var judge = 1;
+      drawImage(
+        eBulletInfo.textureInfo.texture,
+        eBulletInfo.textureInfo.width,
+        eBulletInfo.textureInfo.height,
+        eBulletInfo.x,
+        eBulletInfo.y,
+		judge);
+    });
+	
+	 meInfos.forEach(function(meInfo) {
+	  var judge = 0;
+      drawImage(
+        meInfo.textureInfo.texture,
+        meInfo.textureInfo.width,
+        meInfo.textureInfo.height,
+        meInfo.x,
+        meInfo.y,
+		judge);
+    });
+	
+	bulletInfos.forEach(function(bulletInfo) {
+	  var judge = 0;
+      drawImage(
+        bulletInfo.textureInfo.texture,
+        bulletInfo.textureInfo.width,
+        bulletInfo.textureInfo.height,
+        bulletInfo.x,
+        bulletInfo.y,
+		judge);
+    });
+	
+	
+	
+  }
+
+  var then = 0;
+  var counter = 0;
+  var start = 0;
+  var temp = 0;
+  var HP =100;
+  var score = 0;
+  var q = 60;
+  var countASec = 0;
+  var tForASec=0;
+  function render(time) {
+  
+	var c = document.getElementById("texts");
+	var context = c.getContext("2d");
+	context.clearRect(0,0,c.width,c.height);
+	context.font = "20px serif";
+	context.fillStyle = 'blue';
+	context.fillText("CG HW1",100,23);
+	
+	context.beginPath();
+	context.moveTo(0,30);
+	context.lineTo(300,30);
+	context.stroke();
+	context.fillStyle = 'black';
+	context.fillText('HP: '+HP,25,55);
+	context.fillText('Score: '+score,25,85);
+	context.fillText('Enemy Numbers: ' + enemyInfos.length ,25,115);
+
+	context.fillText('Time: '+q,25,145);
+
+	
+	if(enemyInfos.length==0){  //打光了
+		window.alert("You Win~~");
+	}
+    var now = time * 0.001 ;
+    var deltaTime = Math.min(0.1, now - then);
+    then = now;
+	
+	countASec = (now - tForASec);
+	if(countASec > 1){
+		q--;
+		countASec = 0;
+		tForASec = now;
+	}
+	
+	if(q <0)
+		window.alert("Time's UP!!");
+	if(HP==0)
+		window.alert("Game Over!");
+	counter = (now - temp);
+	//console.log(counter);
+	
+	
+	if(counter>5){
+		
+		if(enemyInfos.length>0){  //有敵人再生成
+		
+			var speed = 180;
+			var index = Math.floor(Math.random()*enemyInfos.length);
+			var eBulletInfo = {
+			
+			x: enemyInfos[index].x+5,
+			y: enemyInfos[index].y + 16,
+			dx: 0,
+			dy: 1,
+			  
+			textureInfo: eBullet[0],
+			};
+			
+			eBulletInfos.push(eBulletInfo);
+		}
+		
+		if(enemyInfos.length <= 30)
+		createEnemy();
+		counter =0;
+		temp = now;
+	}
+	
+    update(deltaTime);
+    draw();
+	
+    requestAnimationFrame(render);
+  }
+  requestAnimationFrame(render);
+  
+  function createEnemy(){
+	var num = 5;
+	for(var i=0;i<num;i++){
+	var enemyInfo = {
+      x: Math.random() * gl.canvas.width,
+      y: (Math.random()*300+1),
+	  //y: 0,
+      dx: Math.random() > 0.5 ? -1 : 1,
+      dy: Math.random() > 0.5 ? -1 : 1,
+      textureInfo: textureInfos[Math.random() * textureInfos.length | 0],
+    };
+	enemyInfos.push(enemyInfo);
+	}
+  }
+  // Unlike images, textures do not have a width and height associated
+  // with them so we'll pass in the width and height of the texture
+  function drawImage(tex, texWidth, texHeight, dstX, dstY,judge) {
+    gl.bindTexture(gl.TEXTURE_2D, tex);
+
+    // Tell WebGL to use our shader program pair
+    gl.useProgram(program);
+
+    // Setup the attributes to pull data from our buffers
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+	
+	
+    gl.bindBuffer(gl.ARRAY_BUFFER, texcoordBuffer);
+    gl.enableVertexAttribArray(texcoordLocation);
+    gl.vertexAttribPointer(texcoordLocation, 2, gl.FLOAT, false, 0, 0);
+
+    // this matirx will convert from pixels to clip space
+    var matrix = m4.orthographic(0, gl.canvas.width, gl.canvas.height, 0, -1, 1);
+
+    // this matrix will translate our quad to dstX, dstY
+    matrix = m4.translate(matrix, dstX, dstY, 0);
+
+    // this matrix will scale our 1 unit quad
+    // from 1 unit to texWidth, texHeight units
+    matrix = m4.scale(matrix, texWidth, texHeight, 1);
+
+    // Set the matrix.
+    gl.uniformMatrix4fv(matrixLocation, false, matrix);
+
+    // Tell the shader to get the texture from texture unit 0
+    gl.uniform1i(textureLocation, 0);
+	
+	
+    // draw the quad (2 triangles, 6 vertices)
+	if(judge==0)
+		gl.drawArrays(gl.TRIANGLES, 0, 3);
+	
+	gl.bindBuffer(gl.ARRAY_BUFFER, ePositionBuffer);
+    gl.enableVertexAttribArray(positionLocation);
+    gl.vertexAttribPointer(positionLocation, 2, gl.FLOAT, false, 0, 0);
+	
+	if(judge==1)
+	gl.drawArrays(gl.TRIANGLES, 0, 3);
+	
+  }
+  
+	window.onkeydown = function(e){
+		if(e.keyCode == 37 ){
+			s = -80;
+			numToDraw = numToDraw +1;
+		}
+		if(e.keyCode == 39 )
+			s= 80;
+		
+			
+		
+	}
+	
+	window.onkeyup = function(e){
+		if(e.keyCode == 37)
+			s = 0;
+		if(e.keyCode == 39)
+			s = 0;
+		
+	
+	}
+	
+	window.onkeypress = function(e){
+		if(e.keyCode == 32){
+			
+			var c = document.getElementById("canvas");
+			var numToDraws = 1;
+
+			var speed = 60;
+			var bulletInfo = {
+			x: meInfo.x+5,
+			y: meInfo.y - 16,
+			dx: 0,
+			dy: -1,
+			
+			textureInfo: bullet[0],
+			};
+			
+			bulletInfos.push(bulletInfo);
+		}
+	}
+	
+}
+main();
+</script>
+</html>
+
+
