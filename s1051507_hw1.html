@@ -76,9 +76,6 @@ function main() {
   // Create a buffer.
   var positionBuffer = gl.createBuffer();
   gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-  
-
-  // Put a unit quad in the buffer
   var positions = [  //要畫三角形的座標
     0, 1,
 	  0.5, 0,
@@ -95,9 +92,8 @@ function main() {
   // Put texcoords in the buffer
   var texcoords = [
     0, 1,
-	0.5, 0,
+	  0.5, 0,
     1, 1,
-   
   ]
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(texcoords), gl.STATIC_DRAW);
   
@@ -106,7 +102,7 @@ function main() {
 	gl.bindBuffer(gl.ARRAY_BUFFER,ePositionBuffer);
   var ePositions = [
     0, 0,
-	1, 0,
+	  1, 0,
     0.5, 1,
   ]
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(ePositions), gl.STATIC_DRAW);
@@ -143,16 +139,13 @@ function main() {
 
     return textureInfo;
   }
+  /*建立Texture*/
+  var enemyTexture = [loadImageAndCreateTextureInfo('s1051507_imag1.png')]; // enemy的 texture
+  var myTexture = [loadImageAndCreateTextureInfo('s1051507_imag2.png')];//本機的 texture
+  var bulletTexture = [loadImageAndCreateTextureInfo('s1051507_imag3.png')]; //自己發射子彈的 texture
+  var eBulletTexture = [loadImageAndCreateTextureInfo('s1051507_imag4.png')];//敵人發射子彈的 texture
 
-  var textureInfos = [
-    
-    loadImageAndCreateTextureInfo('s1051507_imag1.png')
-    //loadImageAndCreateTextureInfo('resources/keyboard.jpg'),
-  ];
-  
-  var me = [loadImageAndCreateTextureInfo('s1051507_imag2.png')];
-  
-  
+  /*建立敵人的list*/
   var enemyInfos = [];
   var numToDraw = 10; //初始敵人數
   var speed = 60; //敵人移動速度
@@ -160,27 +153,30 @@ function main() {
     var enemyInfo = {
       x: Math.random() * gl.canvas.width,
       y: Math.random()*200+1, 
-      dx: Math.random() > 0.5 ? -1 : 1,
-      dy: Math.random() > 0.5 ? -1 : 1,
-      textureInfo: textureInfos[Math.random() * textureInfos.length | 0],
+      dx: Math.random() > 0.5 ? -1 : 1, //x移動方向
+      dy: Math.random() > 0.5 ? -1 : 1, //y移動方向
+      textureInfo: enemyTexture[0],
     };
     enemyInfos.push(enemyInfo);
   }
+
+
+
+  /*建立自己的list*/
   var meInfos=[];
-  
   var meInfo ={
 		x: 500,
 	   y: 569,
       dx:  1,
       dy:  1,
-      textureInfo: me[0],
-    };
+      textureInfo: myTexture[0],
+  };
   meInfos.push(meInfo);
   
-  var bullet = [loadImageAndCreateTextureInfo('s1051507_imag3.png')];
+  
   var bulletInfos= []; //子彈
   
-  var eBullet = [loadImageAndCreateTextureInfo('s1051507_imag4.png')]
+  
   var eBulletInfos = []; //敵人子彈
   
   var s = 0;
@@ -426,7 +422,7 @@ function main() {
 			dx: 0,
 			dy: 1,
 			  
-			textureInfo: eBullet[0],
+			textureInfo: eBulletTexture[0],
 			};
 			
 			eBulletInfos.push(eBulletInfo);
@@ -454,7 +450,7 @@ function main() {
 	  //y: 0,
       dx: Math.random() > 0.5 ? -1 : 1,
       dy: Math.random() > 0.5 ? -1 : 1,
-      textureInfo: textureInfos[Math.random() * textureInfos.length | 0],
+      textureInfo: enemyTexture[Math.random() * enemyTexture.length | 0],
     };
 	enemyInfos.push(enemyInfo);
 	}
@@ -541,7 +537,7 @@ function main() {
 			dx: 0,
 			dy: -1,
 			
-			textureInfo: bullet[0],
+			textureInfo: bulletTexture[0],
 			};
 			
 			bulletInfos.push(bulletInfo);
