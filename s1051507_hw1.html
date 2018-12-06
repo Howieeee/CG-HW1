@@ -151,13 +151,13 @@ function main() {
   var speed = 60; //敵人移動速度
   for (var ii = 0; ii < numToDraw; ++ii) {
     var enemyInfo = {
-      x: Math.random() * gl.canvas.width,
-      y: Math.random()*200+1, 
+      x: Math.random() * gl.canvas.width,//初始x
+      y: Math.random()*200+1, //初始y
       dx: Math.random() > 0.5 ? -1 : 1, //x移動方向
       dy: Math.random() > 0.5 ? -1 : 1, //y移動方向
       textureInfo: enemyTexture[0],
     };
-    enemyInfos.push(enemyInfo);
+    enemyInfos.push(enemyInfo); //push進list
   }
 
 
@@ -165,21 +165,24 @@ function main() {
   /*建立自己的list*/
   var meInfos=[];
   var meInfo ={
-		x: 500,
-	   y: 569,
-      dx:  1,
-      dy:  1,
+		  x: 500,
+	    y: 569,
+      dx: 1,
+      dy: 1,
       textureInfo: myTexture[0],
   };
-  meInfos.push(meInfo);
+  meInfos.push(meInfo);//push進list
   
+  /*建立子彈的list*/
+  /*在onkeyDown中做list的push*/
+  var bulletInfos= []; 
   
-  var bulletInfos= []; //子彈
+  /*建立敵人子彈的list*/
+  /*在每5秒做list的push*/
+  var eBulletInfos = []; 
   
-  
-  var eBulletInfos = []; //敵人子彈
-  
-  var s = 0;
+  var mySpeed = 0; //自己的移動速度
+
   function update(deltaTime) {
   
     enemyInfos.forEach(function(enemyInfo) {  //更新每個敵人
@@ -213,7 +216,7 @@ function main() {
     });
 	
 	meInfos.forEach(function(meInfo) { //更新自己
-      meInfo.x += meInfo.dx * s * deltaTime;
+      meInfo.x += meInfo.dx * mySpeed * deltaTime;
 	  meInfo.y = meInfo.y;
 	  
 	  for(var i=0;i<enemyInfos.length;i++){
@@ -505,11 +508,11 @@ function main() {
   
 	window.onkeydown = function(e){
 		if(e.keyCode == 37 ){
-			s = -80;
+			mySpeed = -80;
 			numToDraw = numToDraw +1;
 		}
 		if(e.keyCode == 39 )
-			s= 80;
+			mySpeed = 80;
 		
 			
 		
@@ -517,9 +520,9 @@ function main() {
 	
 	window.onkeyup = function(e){
 		if(e.keyCode == 37)
-			s = 0;
+			mySpeed = 0;
 		if(e.keyCode == 39)
-			s = 0;
+			mySpeed = 0;
 		
 	
 	}
